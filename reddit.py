@@ -77,7 +77,7 @@ class RedditCrawler:
         - (current MB, file count, crawled post count...)
         '''
 
-    def crawl(self, subreddits, keywords, users):
+    def crawl(self, subreddits, keywords, users, limit):
         '''
         - loop through each subreddit
         - apply keywords and users filters (should_skip_post())

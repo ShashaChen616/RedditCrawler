@@ -6,5 +6,6 @@ USER_AGENT = 1234
 # Constants
 DEFAULT_SUBREDDITS = "technology,Futurology,HackerNews,technews"
 DEFAULT_OUTPUT_DIR = "data"
+DEFAULT_LIMIT = None
 MAX_FILE_SIZE_MB = 10
 MAX_TOTAL_SIZE_MB = 600

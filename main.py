@@ -22,6 +22,10 @@ def parse_arguments():
         help="Directory for storing crawled JSON file (default : data/)"
     )
     parser.add_argument(
+        "--limit", type=int, default=DEFAULT_LIMIT,
+        help="maximum number of post to collect from each subreddit (default : ...)"
+    )
+    parser.add_argument(
         "--keywords", type=str, default = "",
         help="list of keywords to filter posts, comma separated"
     )
