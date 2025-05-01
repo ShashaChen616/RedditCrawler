@@ -1,0 +1,10 @@
+# Praw Credentials
+CLIENT_ID = 1234
+CLIENT_SECRET = 1234
+USER_AGENT = 1234
+
+# Constants
+DEFAULT_SUBREDDITS = "technology,Futurology,HackerNews,technews"
+DEFAULT_OUTPUT_DIR = "data"
+MAX_FILE_SIZE_MB = 10
+MAX_TOTAL_SIZE_MB = 600
