@@ -6,6 +6,6 @@ USER_AGENT = "CS172_Crawler by u/Ancient-Drawing303"
 # Constants
 DEFAULT_SUBREDDITS = "technology,Futurology,HackerNews,technews"
 DEFAULT_OUTPUT_DIR = "data"
-DEFAULT_LIMIT = None
+DEFAULT_LIMIT = 5
 MAX_FILE_SIZE_MB = 10
 MAX_TOTAL_SIZE_MB = 600

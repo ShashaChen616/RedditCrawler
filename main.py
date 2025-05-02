@@ -51,7 +51,9 @@ def main():
     - initalize reddit crawler class
     - start the crawling process
     '''
-    print(parse_arguments().subreddits)
+    args = parse_arguments()
+    redditCrawler = RedditCrawler(CLIENT_ID,CLIENT_SECRET,USER_AGENT)
+    redditCrawler.crawl(args.limit,args.subreddits)
 
 
 if __name__ == "__main__":

@@ -11,12 +11,30 @@ class RedditCrawler:
         - initialize other class variables that will be used
              - file_count, post_count, current_buffer_size, current_total_size...
         '''
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.user_agent = user_agent
+        self.output_dir = output_dir
+        self.max_file_size_mb = max_file_size_mb
+        self.max_total_size_mb = max_total_size_mb
+
+        self.reddit = self.connect_to_reddit()
+
+        self.file_count = 0         # should count how many file already in output_dir
+        self.post_count = 0
+        self.current_buffer_size = 0
+        self.current_total_size = 0
     
     def connect_to_reddit(self):
         '''
-        - Creates a PRAW Reddit instance using provided credentials
-        - stored praw.Reddit(...) as self.reddit
+        - Creates and returns a PRAW Reddit instance using provided credentials
         '''
+        return praw.Reddit(
+            client_id = self.client_id,
+            client_secret = self.client_secret,
+            redirect_uri = "http://localhost:8080",
+            user_agent = self.user_agent
+        )
 
     def should_skip_post(post, keywords, users):
         '''
@@ -77,7 +95,7 @@ class RedditCrawler:
         - (current MB, file count, crawled post count...)
         '''
 
-    def crawl(self, subreddits, keywords, users, limit):
+    def crawl(self, limit, subreddits, keywords=None, users=None):
         '''
         - loop through each subreddit
         - apply keywords and users filters (should_skip_post())
@@ -86,6 +104,8 @@ class RedditCrawler:
         - check total size limit (total_size_limit_reached())
              - if reached: add any remaining data in buffer to file
         '''
+        for post in self.reddit.subreddit(subreddits[0]).new(limit=limit):
+            print(post.title)
     
 
 
