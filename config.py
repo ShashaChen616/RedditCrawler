@@ -1,7 +1,7 @@
 # Praw Credentials
-CLIENT_ID = 1234
-CLIENT_SECRET = 1234
-USER_AGENT = 1234
+CLIENT_ID = "xYF3ddxGunEB8OqM2WYMAQ"
+CLIENT_SECRET = "EU_tdo63i_H5RSGMgR0HuPgy7gBXwg"
+USER_AGENT = "CS172_Crawler by u/Ancient-Drawing303"
 
 # Constants
 DEFAULT_SUBREDDITS = "technology,Futurology,HackerNews,technews"
