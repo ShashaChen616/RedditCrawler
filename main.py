@@ -26,19 +26,20 @@ def parse_arguments():
         help="maximum number of post to collect from each subreddit (default : ...)"
     )
     parser.add_argument(
-        "--keywords", type=str, default = "",
+        "--keywords", type=str, default = None,
         help="list of keywords to filter posts, comma separated"
     )
     parser.add_argument(
-        "--users", type=str, default = "",
+        "--users", type=str, default = None,
         help="list of usernames to filter posts, comma separated"
     )
     args = parser.parse_args()
 
     # Post-process into lists
-    args.subreddits = [s.strip() for s in args.subreddits.split(",") if s.strip()]
-    args.keywords = [k.strip().lower() for k in args.keywords.split(",") if k.strip()]
-    args.users = [u.strip().lower() for u in args.users.split(",") if u.strip()]
+    # return empty [] if None
+    args.subreddits = [s.strip() for s in args.subreddits.split(",") if s.strip()] if args.subreddits is not None else []
+    args.keywords = [k.strip().lower() for k in args.keywords.split(",") if k.strip()] if args.keywords is not None else []
+    args.users = [u.strip().lower() for u in args.users.split(",") if u.strip()] if args.users is not None else []
     
     return args
 
@@ -52,8 +53,12 @@ def main():
     - start the crawling process
     '''
     args = parse_arguments()
-    redditCrawler = RedditCrawler(CLIENT_ID,CLIENT_SECRET,USER_AGENT)
-    redditCrawler.crawl(args.limit,args.subreddits)
+    subreddits, keywords, users = args.subreddits, args.keywords, args.users        # filters
+    limit = args.limit                                                              # max post to collect
+    output = args.output                                                            # output folder to store JSON
+
+    redditCrawler = RedditCrawler(CLIENT_ID,CLIENT_SECRET,USER_AGENT,output,MAX_FILE_SIZE_MB,MAX_TOTAL_SIZE_MB)               # main crawler class obj
+    redditCrawler.crawl(limit, subreddits, keywords, users)
 
 
 if __name__ == "__main__":
