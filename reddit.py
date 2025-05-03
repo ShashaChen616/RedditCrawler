@@ -20,10 +20,12 @@ class RedditCrawler:
 
         self.reddit = self.connect_to_reddit()
 
-        self.file_count = 0         # should count how many file already in output_dir
+        self.file_count = 0                             # should count how many file already in output_dir
         self.post_count = 0
         self.current_buffer_size = 0
         self.current_total_size = 0
+
+        self.buffer = []                                # buffer (list of dictionaries, JSON-serializable)
     
     def connect_to_reddit(self):
         '''
@@ -36,60 +38,58 @@ class RedditCrawler:
             user_agent = self.user_agent
         )
 
-    def should_skip_post(post, keywords, users):
+    def should_skip_post(self, post, keywords, users):
         '''
         - Decide if post should be filtered out based on the provided keywords and users
         - If post contains one of the keywords or is from one of the users, return True
         - Otherwise return False
         '''
+        return False
 
-    def post_to_json(post):
+    def post_to_json(self, post):
         '''
-        - extracts fields from a Reddit post object into a serialized JSON string
+        - extracts fields from a Reddit post object and convert to json string
+        - check slides and project requirement to see which fields
+        - have to also crawl comments
         - if a post contains URLs to external html pages
              - get title of that page
              - add url and title to the JSON of the post
              - maybe in a list??
              
-             "title": "post title",
-             "author": "username",
-             ...
-             "external_urls": [
-                  {
-                  "url":...,
-                  "title":...
-                  },
-                  {
-                  "url":...,
-                  "title":...
-                  }
-               ]
+             - ex. 
+                post_dict = {
+                            "title": "post title", "author": "username", ...
+                            "external_urls": [{"url":...,"title":...}, {"url":...,"title":...}],
+                            "comments": [{"user":...,"text":...}, {"user":...,"text":...}]
+                            }
+                post_json = json.dump(post_dict)
         '''
 
-    def add_json_to_buffer(json):
+    def add_json_to_buffer(self, json):
         '''
-        - initialize buffer as a class variable
-        - Given a JSON string, stored to a buffer
-        - track the size of the buffer
+        - store json to buffer
+        - check json size and update current buffer size
         - when buffer reaches max_file_size_mb (10MB), call write_buffer_to_file()
         '''
     
-    def write_buffer_to_file():
+    def write_buffer_to_file(self):
         '''
         - write the current buffer to a new output file
         - output files should all be in self.output_dir 
         - add index to file names: "reddit_<index>.json
+        - one line per post
+            - for line in buffer: f.write(line + "\n")
         - update total written size
         - reset buffer
         - increment file count
         '''
     
-    def total_size_limit_reached():
+    def total_size_limit_reached(self):
         '''
         - returns True if max_total_size_mb is reached
         '''
 
-    def log_progress():
+    def log_progress(self):
         '''
         - utility to print progress metrics 
         - (current MB, file count, crawled post count...)
@@ -104,8 +104,21 @@ class RedditCrawler:
         - check total size limit (total_size_limit_reached())
              - if reached: add any remaining data in buffer to file
         '''
-        for post in self.reddit.subreddit(subreddits[0]).new(limit=limit):
-            print(post.title)
-    
+        combined_subreddit = "+".join(subreddits)
+        for post in self.reddit.subreddit(combined_subreddit).new(limit=limit):             # use .new() to get the latest
+            
+            if self.should_skip_post(post, keywords, users): continue                       # filter with lists keywords and users
+            
+            post_json = self.post_to_json(post)                                             # convert post to json_string
+
+            self.add_json_to_buffer(post_json)                                              # will write buffer to file when size reached
+
+            if(self.total_size_limit_reached()):
+                if(current_buffer_size!=0):
+                    self.write_buffer_to_file()
+                else:
+                    print("Crawl Complete (memory limit reached)")
+                    return
+            
 
 
