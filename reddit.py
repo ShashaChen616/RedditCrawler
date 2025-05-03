@@ -64,6 +64,30 @@ class RedditCrawler:
                             }
                 post_json = json.dump(post_dict)
         '''
+        
+        post_dict = {
+            "post_ID" : post.id,
+            "title" : post.title,
+            "author" : str(post.author),
+            "body_text": post.selftext,
+            "url": post.url,
+            "upvotes": post.score,
+            "comments": [],
+            "url_from_comments" : []
+        }
+        #gets all the comments from a post(submission)
+        post.comments.replace_more(limit=0)
+        for comment in post.comments.list():
+            post_dict["comments"].append({
+                "user": str(comment.author),
+                "text_comment" : comment.body
+        })
+
+        #print(post_dict)
+        
+        return json.dumps(post_dict)
+
+
 
     def add_json_to_buffer(self, json):
         '''
