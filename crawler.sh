@@ -50,9 +50,9 @@ echo "Post limit per subreddit: $POST_LIMIT"
 [ ! -z "$USERS" ] && echo "Users filter: $USERS"
 echo "-----------------------------------"
 
-CMD="$PYTHON_CMD main.py --subreddits \"$SUBREDDITS\" --limit \"$POST_LIMIT\""
-[ ! -z "$KEYWORDS" ] && CMD="$CMD --keywords \"$KEYWORDS\""
-[ ! -z "$USERS" ] && CMD="$CMD --users \"$USERS\""
+CMD="$PYTHON_CMD main.py --subreddits $SUBREDDITS --limit $POST_LIMIT"
+[ ! -z "$KEYWORDS" ] && CMD="$CMD --keywords $KEYWORDS"
+[ ! -z "$USERS" ] && CMD="$CMD --users $USERS"
 
 $CMD
 
