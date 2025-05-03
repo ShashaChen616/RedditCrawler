@@ -112,12 +112,23 @@ class RedditCrawler:
         '''
         - returns True if max_total_size_mb is reached
         '''
+        # Convert bytes to MB (1 MB = 1024 * 1024 bytes)
+        total_size_mb = self.current_total_size / (1024 * 1024)
+        return total_size_mb >= self.max_total_size_mb
 
     def log_progress(self):
         '''
         - utility to print progress metrics 
         - (current MB, file count, crawled post count...)
         '''
+        total_size_mb = self.current_total_size / (1024 * 1024)
+        buffer_size_mb = self.current_buffer_size / (1024 * 1024)
+        
+        print(f"\nCrawling Progress:")
+        print(f"Posts collected: {self.post_count}")
+        print(f"Files written: {self.file_count}")
+        print(f"Current buffer size: {buffer_size_mb:.2f}MB")
+        print(f"Total data collected: {total_size_mb:.2f}MB / {self.max_total_size_mb}MB")
 
     def crawl(self, limit, subreddits, keywords=None, users=None):
         '''
@@ -138,11 +149,8 @@ class RedditCrawler:
             self.add_json_to_buffer(post_json)                                              # will write buffer to file when size reached
 
             if(self.total_size_limit_reached()):
-                if(current_buffer_size!=0):
+                if(self.current_buffer_size!=0):
                     self.write_buffer_to_file()
                 else:
                     print("Crawl Complete (memory limit reached)")
                     return
-            
-
-
