@@ -1,6 +1,7 @@
 import praw
 import json
 import os
+import re
 from config import *
 
 class RedditCrawler:
@@ -44,7 +45,24 @@ class RedditCrawler:
         - If post contains one of the keywords or is from one of the users, return True
         - Otherwise return False
         '''
+        title  =  post.title.lower()
+        if post.author:
+            author =  str(post.author).lower() 
+        else: 
+            author = ""
+
+        if users and author in users:
+            return True
+        if keywords and any(kw in title for kw in keywords):
+            return True
+
+
         return False
+    
+    @staticmethod
+    def get_http_url(text):
+        url_pattern = r'(http://[^\s]+)'
+        return re.findall(url_pattern, text)
 
     def post_to_json(self, post):
         '''
@@ -76,18 +94,21 @@ class RedditCrawler:
             "url_from_comments" : []
         }
         #gets all the comments from a post(submission)
+        #also extract url from comments (http only)
         post.comments.replace_more(limit=0)
         for comment in post.comments.list():
+            urls = self.get_http_url(comment.body)
+            if urls:
+                post_dict["url_from_comments"].append(urls)
             post_dict["comments"].append({
                 "user": str(comment.author),
                 "text_comment" : comment.body
         })
-
-        #print(post_dict)
+        
+        print(post_dict)
         
         return json.dumps(post_dict)
-
-
+    
 
     def add_json_to_buffer(self, json):
         '''
