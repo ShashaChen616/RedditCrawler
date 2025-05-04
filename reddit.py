@@ -116,6 +116,13 @@ class RedditCrawler:
         - check json size and update current buffer size
         - when buffer reaches max_file_size_mb (10MB), call write_buffer_to_file()
         '''
+        json_bytes = len(json.encode('utf-8'))
+        self.buffer.append(json)
+        self.current_buffer_size += json_bytes
+
+        if self.current_buffer_size >= self.max_file_size_mb * 1024 * 1024:
+            self.write_buffer_to_file()
+
     
     def write_buffer_to_file(self):
         '''
@@ -128,6 +135,22 @@ class RedditCrawler:
         - reset buffer
         - increment file count
         '''
+
+        #create filename with current index
+        filename = os.path.join(self.output_dir, f"reddit_{self.file_count}.json")
+
+        with open(filename, "w", encoding="utf-8") as f:
+            for post_json in self.buffer:
+                f.write(post_json + "\n")
+        
+        #get file size and update stats
+        file_size = os.path.getsize(filename)
+        self.current_total_size += file_size
+        self.current_buffer_size = 0
+        self.buffer = []
+        self.file_count += 1
+        print(f"Wrote buffer to file: {filename} ({file_size / (1024 * 1024):.2f} MB)")
+    
     
     def total_size_limit_reached(self):
         '''
