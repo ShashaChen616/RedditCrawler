@@ -191,7 +191,7 @@ class RedditCrawler:
         print(f"Current buffer size: {buffer_size_mb:.2f}MB")
         print(f"Total data collected: {total_size_mb:.2f}MB / {self.max_total_size_mb}MB")
 
-    def crawl(self, limit, subreddits, keywords=None, users=None):
+    def crawl(self, subreddits, memlimit, limit, keywords=None, users=None):
         '''
         - loop through each subreddit
         - apply keywords and users filters (should_skip_post())
