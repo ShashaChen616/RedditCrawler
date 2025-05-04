@@ -2,6 +2,8 @@ import praw
 import json
 import os
 import re
+import requests
+from bs4 import BeautifulSoup
 from config import *
 
 class RedditCrawler:
@@ -63,6 +65,16 @@ class RedditCrawler:
     def get_http_url(text):
         url_pattern = r'(http://[^\s]+)'
         return re.findall(url_pattern, text)
+    
+    @staticmethod
+    def get_url_title(url):
+        try: 
+            page =  requests.get(url)
+            soup =  BeautifulSoup(page.content, 'html.parser')
+            title_tag = soup.find('title')
+            return title_tag.string
+        except Exception as e:
+            return "Failed to fetch title"
 
     def post_to_json(self, post):
         '''
@@ -99,7 +111,12 @@ class RedditCrawler:
         for comment in post.comments.list():
             urls = self.get_http_url(comment.body)
             if urls:
-                post_dict["url_from_comments"].append(urls)
+                for url in urls:
+                    title = self.get_url_title(url)
+                    post_dict["url_from_comments"].append({
+                        "title": title,
+                        "url" : urls
+                    })
             post_dict["comments"].append({
                 "user": str(comment.author),
                 "text_comment" : comment.body
