@@ -18,6 +18,7 @@ class RedditCrawler:
         self.client_secret = client_secret
         self.user_agent = user_agent
         self.output_dir = output_dir
+        os.makedirs(self.output_dir, exist_ok=True)
         self.max_file_size_mb = max_file_size_mb
         self.max_total_size_mb = max_total_size_mb
 
@@ -103,7 +104,8 @@ class RedditCrawler:
             "url": post.url,
             "upvotes": post.score,
             "comments": [],
-            "url_from_comments" : []
+            "url_from_comments" : [],
+            "external_url" : []
         }
         #gets all the comments from a post(submission)
         #also extract url from comments (http only)
@@ -121,7 +123,14 @@ class RedditCrawler:
                 "user": str(comment.author),
                 "text_comment" : comment.body
         })
-        
+        urls = self.get_http_url(post.selftext)
+        if urls:
+            for url in urls:
+                title = self.get_url_title(url)
+                post_dict["external_url"].append({
+                    "title": title,
+                    "url" : urls
+                    })
         print(post_dict)
         
         return json.dumps(post_dict)
