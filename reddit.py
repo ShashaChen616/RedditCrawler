@@ -4,6 +4,7 @@ import os
 import re
 import requests
 import time
+import fnmatch
 from bs4 import BeautifulSoup
 from config import *
 
@@ -25,7 +26,7 @@ class RedditCrawler:
 
         self.reddit = self.connect_to_reddit()
 
-        self.file_count = 0                             # should count how many file already in output_dir
+        self.file_count = self.matching_file_in_dir(output_dir, "reddit_*.json")
         self.post_count = 0
         self.current_buffer_size = 0
         self.current_total_size = 0
@@ -63,6 +64,14 @@ class RedditCrawler:
 
         return False
     
+    @staticmethod
+    def matching_file_in_dir(dir, pattern):
+        count = 0
+        for f in os.listdir(dir):
+            if os.path.isfile(os.path.join(dir, f)) and fnmatch.fnmatch(f, pattern):
+                count+=1
+        return count
+
     @staticmethod
     def get_http_url(text):
         url_pattern = r'(http://[^\s]+)'
