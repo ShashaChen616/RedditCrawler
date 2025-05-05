@@ -3,6 +3,7 @@ import json
 import os
 import re
 import requests
+import time
 from bs4 import BeautifulSoup
 from config import *
 
@@ -210,6 +211,9 @@ class RedditCrawler:
         - check total size limit (total_size_limit_reached())
              - if reached: add any remaining data in buffer to file
         '''
+        start_time = time.time()
+        last_time = start_time
+
         self.max_total_size_mb = memlimit
         if(self.max_file_size_mb > self.max_total_size_mb):
             self.max_file_size_mb = self.max_total_size_mb
@@ -224,11 +228,19 @@ class RedditCrawler:
 
             self.add_json_to_buffer(post_json)                                              # will write buffer to file when size reached
 
+            now = time.time()
+            if now-last_time >= TIME_BETWEEN_LOGS:
+                print(f"\nTime Elapsed: {int(now-start_time)} sec")
+                self.log_progress()
+                last_time = now
+
             if(self.total_size_limit_reached()):
                 if(self.current_buffer_size!=0):
                     self.write_buffer_to_file()
                 print("-------------------------------------")
                 print("Crawl Complete (memory limit reached)")
+                print("Final Log: ")
+                self.log_progress()
                 print("-------------------------------------")
 
                 return
