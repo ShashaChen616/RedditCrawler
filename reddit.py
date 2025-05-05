@@ -236,13 +236,20 @@ class RedditCrawler:
 
         combined_subreddit = "+".join(subreddits)
         for post in self.reddit.subreddit(combined_subreddit).new(limit=limit):             # use .new() to get the latest
+            try:
             
-            if self.should_skip_post(post, keywords, users): continue                       # filter with lists keywords and users
+                if self.should_skip_post(post, keywords, users): 
+                    continue  # filter with lists keywords and users
             
-            post_json = self.post_to_json(post)                                             # convert post to json_string
-            self.post_count+=1
+                post_json = self.post_to_json(post)# convert post to json_string
+                if post_json is not None:
+                    self.post_count+=1
+                    self.add_json_to_buffer(post_json)# will write buffer to file when size reached
 
-            self.add_json_to_buffer(post_json)                                              # will write buffer to file when size reached
+            except Exception as e:
+                time.sleep(3)
+                continue
+            
 
             now = time.time()
             if now-last_time >= TIME_BETWEEN_LOGS:
