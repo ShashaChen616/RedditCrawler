@@ -22,7 +22,7 @@ def parse_arguments():
         help="Directory for storing crawled JSON file (default : data/)"
     )
     parser.add_argument(
-        "--memlimit", type=int, default=DEFAULT_MEMLIMIT, 
+        "--memlimit", type=int, default=MAX_TOTAL_SIZE_MB, 
         help="max data size to collect from a single crawl (in MB)"
     )
     parser.add_argument(
@@ -58,10 +58,10 @@ def main():
     '''
     args = parse_arguments()
     subreddits, keywords, users = args.subreddits, args.keywords, args.users        # filters
-    memlimit, limit = args.memlimit, args.limit                                                              # max post to collect
+    memlimit, limit = args.memlimit, args.limit                                     # max post to collect
     output = args.output                                                            # output folder to store JSON
 
-    redditCrawler = RedditCrawler(CLIENT_ID,CLIENT_SECRET,USER_AGENT,output,MAX_FILE_SIZE_MB,MAX_TOTAL_SIZE_MB)               # main crawler class obj
+    redditCrawler = RedditCrawler(CLIENT_ID,CLIENT_SECRET,USER_AGENT,output,MAX_FILE_SIZE_MB)               # main crawler class obj
     redditCrawler.crawl(subreddits, memlimit, limit, keywords, users)
 
 

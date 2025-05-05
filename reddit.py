@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from config import *
 
 class RedditCrawler:
-    def __init__(self, client_id, client_secret, user_agent, output_dir = DEFAULT_OUTPUT_DIR, max_file_size_mb = MAX_FILE_SIZE_MB, max_total_size_mb = MAX_TOTAL_SIZE_MB):
+    def __init__(self, client_id, client_secret, user_agent, output_dir = DEFAULT_OUTPUT_DIR, max_file_size_mb = MAX_FILE_SIZE_MB):
         '''
         - initialize all class variables
         - call connect_to_reddit(self) to create PRAW instance
@@ -20,7 +20,7 @@ class RedditCrawler:
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
         self.max_file_size_mb = max_file_size_mb
-        self.max_total_size_mb = max_total_size_mb
+        self.max_total_size_mb = 0                      # set in crawl with memlimit
 
         self.reddit = self.connect_to_reddit()
 
@@ -104,8 +104,8 @@ class RedditCrawler:
             "url": post.url,
             "upvotes": post.score,
             "comments": [],
-            "url_from_comments" : [],
-            "external_url" : []
+            "external_url" : [],
+            "external_url_comments" : [],
         }
         #gets all the comments from a post(submission)
         #also extract url from comments (http only)
@@ -115,7 +115,7 @@ class RedditCrawler:
             if urls:
                 for url in urls:
                     title = self.get_url_title(url)
-                    post_dict["url_from_comments"].append({
+                    post_dict["external_url_comments"].append({
                         "title": title,
                         "url" : urls
                     })
@@ -123,6 +123,7 @@ class RedditCrawler:
                 "user": str(comment.author),
                 "text_comment" : comment.body
         })
+
         urls = self.get_http_url(post.selftext)
         if urls:
             for url in urls:
@@ -131,7 +132,7 @@ class RedditCrawler:
                     "title": title,
                     "url" : urls
                     })
-        print(post_dict)
+        #print(post_dict)
         
         return json.dumps(post_dict)
     
@@ -209,18 +210,25 @@ class RedditCrawler:
         - check total size limit (total_size_limit_reached())
              - if reached: add any remaining data in buffer to file
         '''
+        self.max_total_size_mb = memlimit
+        if(self.max_file_size_mb > self.max_total_size_mb):
+            self.max_file_size_mb = self.max_total_size_mb
+
         combined_subreddit = "+".join(subreddits)
         for post in self.reddit.subreddit(combined_subreddit).new(limit=limit):             # use .new() to get the latest
             
             if self.should_skip_post(post, keywords, users): continue                       # filter with lists keywords and users
             
             post_json = self.post_to_json(post)                                             # convert post to json_string
+            self.post_count+=1
 
             self.add_json_to_buffer(post_json)                                              # will write buffer to file when size reached
 
             if(self.total_size_limit_reached()):
                 if(self.current_buffer_size!=0):
                     self.write_buffer_to_file()
-                else:
-                    print("Crawl Complete (memory limit reached)")
-                    return
+                print("-------------------------------------")
+                print("Crawl Complete (memory limit reached)")
+                print("-------------------------------------")
+
+                return
