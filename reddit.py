@@ -107,20 +107,24 @@ class RedditCrawler:
         '''
         
         post_dict = {
-            "post_ID" : post.id,
+            "id" : post.id,
             "title" : post.title,
             "author" : str(post.author),
-            "body_text": post.selftext,
+            "selftext": post.selftext,
             "url": post.url,
-            "upvotes": post.score,
+            "score": post.score,
+            "subreddit":str(post.subreddit),
+            "permalink":post.permalink,
             "comments": [],
             "external_url" : [],
             "external_url_comments" : [],
         }
         #gets all the comments from a post(submission)
         #also extract url from comments (http only)
-        post.comments.replace_more(limit=0)
-        for comment in post.comments.list():
+        full_post = self.reddit.submission(url="https://www.reddit.com" + post.permalink)
+        full_post.comments.replace_more(limit=None)
+        all_comments = full_post.comments.list()
+        for comment in all_comments:
             urls = self.get_http_url(comment.body)
             if urls:
                 for url in urls:
@@ -130,8 +134,11 @@ class RedditCrawler:
                         "url" : urls
                     })
             post_dict["comments"].append({
+                "id": comment.id,
                 "user": str(comment.author),
-                "text_comment" : comment.body
+                "body": comment.body,
+                "score": comment.score,
+                "created_utc": comment.created_utc
         })
 
         urls = self.get_http_url(post.selftext)
