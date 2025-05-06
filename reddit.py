@@ -267,3 +267,9 @@ class RedditCrawler:
                 print("-------------------------------------")
 
                 return
+        
+        print("-------------------------------------")
+        print("Crawl Complete (No more post)")
+        print("Final Log: ")
+        self.log_progress()
+        print("-------------------------------------")
