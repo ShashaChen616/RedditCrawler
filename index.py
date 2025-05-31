@@ -61,22 +61,24 @@ def create_index(data_dir=DEFAULT_OUTPUT_DIR, index_dir=DEFAULT_INDEX_DIR, log_f
 
         filepath = os.path.join(data_dir, filename)
         try:
-            print(f'Starting file: {filename}')
             with open(filepath, 'r', encoding='utf-8') as f:
                 for i, line in enumerate(f,1):
                     try:
                         post = json.loads(line.strip())
                         title = post.get('title', '')
-                        context = post.get('selftext', post.get('body',''))
+                        body = post.get('selftext', post.get('body',''))
+                        author = post.get('author', 'Unknown')
+                        subreddit = post.get('subreddit', 'Unknown')
+                        url = post.get('url', '')
+                        score = post.get('score', 0)
+                        permalink = post.get('permalink', '')
 
                         doc = Document()
                         doc.add(Field('Title', str(title), metaType))
-                        doc.add(Field('Context', str(context), contextType))
+                        doc.add(Field('Body', str(body), contextType))
                         writer.addDocument(doc)
 
                         total_docs += 1
-                        if i%100 == 0 or i == 1:
-                            print(f"   -> {i} posts indexed so far from '{filename}'")
 
                     except Exception as e:
                         print(f"Skipping line in {filename}: {e}")
