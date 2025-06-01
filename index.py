@@ -5,11 +5,12 @@ import os
 from org.apache.lucene.store import MMapDirectory, SimpleFSDirectory, NIOFSDirectory
 from java.nio.file import Paths
 from org.apache.lucene.analysis.standard import StandardAnalyzer
-from org.apache.lucene.document import Document, Field, FieldType
+from org.apache.lucene.document import Document, Field, FieldType, StoredField, IntPoint, LongPoint
 from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.index import FieldInfo, IndexWriter, IndexWriterConfig, IndexOptions, DirectoryReader
 from org.apache.lucene.search import IndexSearcher, BoostQuery, Query
 from org.apache.lucene.search.similarities import BM25Similarity
+from urllib.parse import urlparse
 
 from config import *
 import json
@@ -71,11 +72,51 @@ def create_index(data_dir=DEFAULT_OUTPUT_DIR, index_dir=DEFAULT_INDEX_DIR, log_f
                         subreddit = post.get('subreddit', 'Unknown')
                         url = post.get('url', '')
                         score = post.get('score', 0)
-                        permalink = post.get('permalink', '')
+
+                        comments = post.get('comments', [])
+                        extracted_comments = [
+                            {
+                                "author": str(c.get('author', 'Unknown')),
+                                "body": c.get('body', ''),
+                                "score": int(c.get('score', 0) or 0),
+                                "created_utc": int(c.get('created_utc', 0) or 0),
+                            }
+                            for c in comments if isinstance(c, dict)
+                        ]
+                        created_utc = (
+                            min((c['created_utc'] for c in extracted_comments if c['created_utc'] > 0), default=None)
+                        )
+                        external_url = list({u for u in post.get('external_url', []) + post.get('external_url_comments', []) if isinstance(u, str)})
 
                         doc = Document()
-                        doc.add(Field('Title', str(title), metaType))
+                        doc.add(Field('Title', str(title), contextType))
                         doc.add(Field('Body', str(body), contextType))
+                        doc.add(Field('Author', str(author), metaType))
+                        doc.add(Field('Subreddit', str(subreddit), metaType))
+                        doc.add(Field('URL', str(url), metaType))
+
+                        doc.add(IntPoint('Score', int(score)))
+                        doc.add(StoredField('Score', int(score)))
+
+                        if created_utc is not None:
+                            doc.add(LongPoint('CreatedUTC', created_utc))
+                            doc.add(StoredField('CreatedUTC', created_utc))
+
+                        for comment in extracted_comments:
+                            doc.add(Field('CommentAuthor', str(comment['author']), metaType))
+                            doc.add(Field('CommentBody', str(comment['body']), contextType))
+                            doc.add(IntPoint('CommentScore', int(comment['score'])))
+                            doc.add(StoredField('CommentScore', int(comment['score'])))
+                            doc.add(LongPoint('CommentCreatedUTC', comment['created_utc']))
+                            doc.add(StoredField('CommentCreatedUTC', comment['created_utc']))
+
+                        for url in external_url:
+                            if isinstance(url, str) and url.startswith('http'):
+                                doc.add(Field('ExternalURL', str(url), metaType))
+                                domain = urlparse(url).netloc
+                                if domain:
+                                    doc.add(Field('ExternalURLDomain', str(domain), metaType))
+                        
                         writer.addDocument(doc)
 
                         total_docs += 1
