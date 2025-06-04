@@ -66,7 +66,73 @@ def combine_score(relevance, created_utc, reddit_score):
 # - combine scores using combine_score()
 # - return sorted results
 def rerank(top_results, searcher):
-    TODO
+    ranked_results = []Add commentMore actions
+
+    for score_doc in top_results.scoreDocs:
+        doc = searcher.doc(score_doc.doc)
+
+        # extract fields from document
+        title = doc.get("Title")
+        body = doc.get("Body")
+        author = doc.get("Author")
+        subreddit = doc.get("Subreddit")
+        url = doc.get("URL")
+
+        # get numeric values with defaults
+        try:
+            score = int(doc.get("Score"))
+        except:
+            score = 0
+        
+        try:
+            created_utc = int(doc.get("CreatedUTC"))
+        except:
+            created_utc = 0
+        
+        # get relevance score from BM25
+        relevance = score_doc.score
+
+        # calculate combined score
+        combined = combine_score(relevance, created_utc, score)
+
+        # collect comments if available
+        comments = []
+        comment_fields = ["CommentAuthor", "CommentBody", "CommentScore", "CommentCreatedUTC"]
+        for i in range (len(doc.getFields("CommentAuthor"))):
+            comment = {
+                "author": doc.getValues("CommentAuthor")[i],
+                "body": doc.getValues("CommentBody")[i],
+                "score": int(doc.getValues("CommentScore")[i]),
+                "created_utc": int(doc.getValues("CommentCreatdUTC")[i])
+            }
+            comments.append(comment)
+        
+        # get external URLs if available
+        external_urls = []
+        if doc.get("ExternalURL"):
+            for url in doc.getValues("ExternalURL"):
+                external_urls.append(url)
+        
+        # create result dictionary
+        result = {
+            "title": title,
+            "selftext": body,
+            "body": body,
+            "author": author,
+            "subreddit": subreddit,
+            "url": url,
+            "score": score,
+            "created_utc": created_utc,
+            "relevance": relevance,
+            "combined_score": combined,
+            "comments": comments,
+            "external_url": external_urls
+        }
+        ranked_results.append(result)
+        
+    # sort by combined score (highest first)
+    ranked_results.sort(key=lambda x: x["combined_score"], reverse=True)
+    return ranked_results
 
 # Perform search and return ranked results
 def search_index(query_str, index_dir=DEFAULT_INDEX_DIR, top_k=10, analyzer=StandardAnalyzer()):
