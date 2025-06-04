@@ -9,6 +9,8 @@ from org.apache.lucene.queryparser.classic import QueryParser, MultiFieldQueryPa
 from org.apache.lucene.search import IndexSearcher, BoostQuery, Query
 from org.apache.lucene.search.similarities import BM25Similarity
 from urllib.parse import urlparse
+import math
+import time
 
 from config import *
 import json
@@ -45,7 +47,17 @@ def parse_query(query_str, analyzer=StandardAnalyzer(), fields=['Title', 'Body',
 # - reddit_score: reddit post score       (upvote - downvote)
 # apply weight to each component
 def combine_score(relevance, created_utc, reddit_score):
-    TODO
+    
+    age_hours = (time.time() - created_utc) / 3600
+    recency_score = 1 / (1 + age_hours)
+    reddit_score_norm = math.log(1+reddit_score) # prevent from overwhelming the ranking with very high vote posts
+
+    w_rel = 0.5
+    w_vote =0.3
+    w_time = 0.2
+
+    return (w_rel * relevance) + (w_vote * reddit_score_norm) + (w_time * recency_score)
+
 
 # Rerank and sort search results (top_docs) based on combined score
 # - format results from topDocs

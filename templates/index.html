@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Search Reddit{% endblock %}
+
+{% block content %}
+<h2>Search Reddit Posts</h2>
+{% if error %}
+  <p class="error">{{ error }}</p>
+{% endif %}
+<form action="/search" method="get">
+    <input type="text" name="q" placeholder="Enter search keywords..." required>
+    <input type="number" name="top_k" min="1" max="100" value="10">
+    <button type="submit">Search</button>
+</form>
+{% endblock %}

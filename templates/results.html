@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Results for "{{ query }}"{% endblock %}
+
+{% block content %}
+    <h2>Results for "{{ query }}" ({{ count }} results in {{ time }}s)</h2>
+
+    {% if results|length == 0 %}
+    <p>No results found.</p>
+    {% endif %}
+
+    {% for result in results %}
+    <div class="result">
+        <h3><a href="{{ result.url }}" target="_blank">{{ result.title }}</a></h3>
+        <p>
+        <strong>Author:</strong> {{ result.author }} |
+        <strong>Score:</strong> {{ result.score }} |
+        <strong>Date:</strong> {{ result.created_date }}
+        </p>
+        <div class="body">{{ result.body_html | safe }}</div>
+        <p>
+        <strong>Relevance:</strong> {{ result.relevance }},
+        <strong>Final Score:</strong> {{ result.combined_score }}
+        </p>
+    </div>
+    <hr>
+    {% endfor %}
+{% endblock %}
