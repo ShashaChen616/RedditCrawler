@@ -51,6 +51,7 @@ def create_index(data_dir=DEFAULT_OUTPUT_DIR, index_dir=DEFAULT_INDEX_DIR, log_f
     contextType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 
     total_docs = 0
+    seen_ids = set()
     
     for filename in os.listdir(data_dir):
         # skip already indexed files and non-JSON files
@@ -63,6 +64,12 @@ def create_index(data_dir=DEFAULT_OUTPUT_DIR, index_dir=DEFAULT_INDEX_DIR, log_f
                 for i, line in enumerate(f,1):
                     try:
                         post = json.loads(line.strip())
+
+                        id = post.get('id', None)
+                        if not id or id in seen_ids:
+                            continue
+                        seen_ids.add(id)
+
                         title = post.get('title', '')
                         body = post.get('selftext', post.get('body',''))
                         author = post.get('author', 'Unknown')
