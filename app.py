@@ -145,11 +145,23 @@ def search():
                 'author': result['author'],
                 'score': result['score'],
                 'url': result['url'],
+                'created_data_nondisplay': created_date,
                 'created_date': created_date.strftime('%Y-%m-%d %H:%M:%S') if created_date else 'Unknown',
                 'relevance': round(result['relevance'], 3),
                 'combined_score': round(result['combined_score'], 3)
             }
             formatted_results.append(formatted_result)
+
+        sort_option = request.args.get('sort', 'combined_score')
+        if sort_option == 'relevance':
+            formatted_results.sort(key=lambda x: x['relevance'], reverse=True)
+        elif sort_option == 'votes':
+            formatted_results.sort(key=lambda x: x['score'], reverse=True)
+        elif sort_option == 'time':
+            formatted_results.sort(
+                key=lambda x: x['created_data_nondisplay'] or datetime.min,
+                reverse=True
+            )
         
         return render_template('results.html', 
                               query=query, 
