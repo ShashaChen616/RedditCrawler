@@ -8,12 +8,15 @@ from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.queryparser.classic import QueryParser, MultiFieldQueryParser
 from org.apache.lucene.search import IndexSearcher, BoostQuery, Query
 from org.apache.lucene.search.similarities import BM25Similarity
+from org.apache.lucene.index import DirectoryReader
 from urllib.parse import urlparse
 import math
 import time
 
 from config import *
 import json
+from java.util import HashMap
+from java.lang import Float
 
 # Functions for searching the index to use in app.py
 
@@ -21,7 +24,6 @@ lucene.initVM()
 
 # Load index and return reader and searcher
 def load_index(index_dir=DEFAULT_INDEX_DIR):
-    lucene.initVM()
     index_dir = SimpleFSDirectory(Paths.get(index_dir))
     reader = DirectoryReader.open(index_dir)                # need reader.close() later
     searcher = IndexSearcher(reader)
@@ -30,16 +32,16 @@ def load_index(index_dir=DEFAULT_INDEX_DIR):
 
 # Parse query w/ MultiFieldQueryParser and Boosting
 def parse_query(query_str, analyzer=StandardAnalyzer(), fields=['Title', 'Body', 'Author']):
-    parser = MultiFieldQueryParser(fields, analyzer)
 
-    # set boosts, default 1
-    boosts = {
-        'Title': 2.0,
-        'Body': 1.0,
-        'Author': 0.3
-    }
-    parser.setBoosts(boosts)
-    return parser.parse(query_str)
+    # default boosts = 1
+    boosts = HashMap()
+    boosts.put('Title', Float(2.0))
+    boosts.put('Body', Float(1.0))
+    boosts.put('Author', Float(0.3))
+
+    parser = MultiFieldQueryParser(fields, analyzer, boosts)
+    return MultiFieldQueryParser.parse(parser, query_str)
+
 
 # Return combined score w/ :
 # - relevance: BM25 similarity            (relevance score)
@@ -66,7 +68,7 @@ def combine_score(relevance, created_utc, reddit_score):
 # - combine scores using combine_score()
 # - return sorted results
 def rerank(top_results, searcher):
-    ranked_results = []Add commentMore actions
+    ranked_results = []
 
     for score_doc in top_results.scoreDocs:
         doc = searcher.doc(score_doc.doc)
@@ -103,7 +105,7 @@ def rerank(top_results, searcher):
                 "author": doc.getValues("CommentAuthor")[i],
                 "body": doc.getValues("CommentBody")[i],
                 "score": int(doc.getValues("CommentScore")[i]),
-                "created_utc": int(doc.getValues("CommentCreatdUTC")[i])
+                "created_utc": int(doc.getValues("CommentCreatedUTC")[i])
             }
             comments.append(comment)
         

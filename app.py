@@ -5,6 +5,7 @@ import os
 import time
 import json
 import markdown
+import lucene
 from datetime import datetime
 
 from config import DEFAULT_INDEX_DIR
@@ -69,6 +70,27 @@ except ImportError as e:
         sorted_results = sorted(mock_results, key=lambda x: x["combined_score"], reverse=True)
         return sorted_results[:top_k]
 
+
+def generate_snippet(text, query_terms, max_len=300):
+    """
+    Generate a snippet by finding the first match of any query term and showing its surrounding context.
+    If no match is found, return the first max_len characters.
+    """
+    text_lower = text.lower()
+    for term in query_terms:
+        idx = text_lower.find(term.lower())
+        if idx != -1:
+            start = max(0, idx - 50)
+            end = min(len(text), idx + 250)
+            snippet = text[start:end]
+            if start > 0:
+                snippet = "..." + snippet
+            if end < len(text):
+                snippet = snippet + "..."
+            return snippet
+    return text[:max_len] + "..." if len(text) > max_len else text
+
+
 app = Flask(__name__)
 
 logging.disable(sys.maxsize)
@@ -81,6 +103,7 @@ def index():
 @app.route('/search')
 def search():
     """Handle search requests"""
+    lucene.getVMEnv().attachCurrentThread()
     query = request.args.get('q', '')
     if not query:
         return render_template('index.html', error='Please enter a search query')
@@ -96,6 +119,8 @@ def search():
         else:
             # Use the actual PyLucene search_index function
             results = search_index(query, DEFAULT_INDEX_DIR, top_k)
+            if not results:
+                return render_template('index.html', error='No results found for your query')
         search_time = time.time() - start_time
         
         # Format results for display
@@ -105,8 +130,13 @@ def search():
             created_date = datetime.fromtimestamp(result['created_utc']) if result['created_utc'] else None
             
             # Convert markdown to HTML for body content (handle missing body field)
+            # body = result.get('body', result.get('selftext', ''))
+            # body_html = markdown.markdown(body[:500] + '...' if len(body) > 500 else body)
             body = result.get('body', result.get('selftext', ''))
-            body_html = markdown.markdown(body[:500] + '...' if len(body) > 500 else body)
+            query_terms = query.split()  # split query into terms
+            snippet = generate_snippet(body, query_terms)
+            body_html = markdown.markdown(snippet)
+
             
             # Format the result
             formatted_result = {
