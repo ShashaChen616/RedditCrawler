@@ -117,10 +117,10 @@ Score = 0.5 * Relevance + 0.3 * Popularity + 0.2 * Recency
 ## 🖼️ Demo 🖼️
 
 ### Search Interface
-![Search Interface](images/interface.png)
+![Search Interface](img/demo1.png)
 
 ### Results Page
-![Results Page](images/results.png)
+![Results Page](img/demo2.png)
 
 ---
 
