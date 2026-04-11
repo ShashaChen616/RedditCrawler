@@ -149,7 +149,7 @@ http://127.0.0.1:3000
 
 ## 🎥 Demo Video 🎥
 
-[https://youtu.be/qoaP6CcthHY](https://youtu.be/qoaP6CcthHY)
+[![Reddit Data Pipeline Demo](https://img.youtube.com/vi/qoaP6CcthHY/0.jpg)](https://www.youtube.com/watch?v=qoaP6CcthHY)
 
 ---
 
